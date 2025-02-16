@@ -10,7 +10,7 @@ namespace StockDashboardAPI.Services
         private readonly ILogger<StockDataFetcherService> _logger;
         private readonly HttpClient _httpClient;
         private readonly IHubContext<StockHub> _hubContext;
-        private readonly string _stockApiUrl = "https://www.alphavantage.co/query?function=TIME_SERIES_WEEKLY&symbol=IBM&apikey=demo";
+        private readonly string _stockApiUrl = "https://www.alphavantage.co/query?function=TIME_SERIES_INTRADAY&symbol=IBM&interval=1min&apikey=demo";
         public StockDataFetcherService(ILogger<StockDataFetcherService> logger, HttpClient httpClient, IHubContext<StockHub> hubContext)
         {
             _logger = logger;
