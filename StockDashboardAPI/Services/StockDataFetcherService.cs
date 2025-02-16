@@ -20,6 +20,7 @@ namespace StockDashboardAPI.Services
 
         protected override async Task ExecuteAsync(CancellationToken stoppingToken)
         {
+            DateTime startingDate = new DateTime(2025, 02, 14, 16, 28, 0);
             while (!stoppingToken.IsCancellationRequested)
             {
                 try
@@ -34,11 +35,13 @@ namespace StockDashboardAPI.Services
                         PropertyNameCaseInsensitive = true
                     });
 
-                    stockData.Timestamp = DateTime.Now;
+                    //stockData.Timestamp = startingDate.AddSeconds(10);
 
                     await _hubContext.Clients.All.SendAsync("ReceiveStockData", stockData, cancellationToken: stoppingToken);
 
-                    _logger.LogInformation($"Broadcasted stock data: {stockData.Symbol} - {stockData.Price}");
+                    var latestEntry = stockData.Valume.OrderByDescending(x => x.Key).First();   
+
+                    _logger.LogInformation($"Broadcasted stock data: {int.Parse(latestEntry.Value.Volume) - 8.7}");
                 }
                 catch (Exception ex)
                 {
@@ -46,7 +49,7 @@ namespace StockDashboardAPI.Services
                 }
 
                 // Wait for a period before the next fetch
-                await Task.Delay(TimeSpan.FromSeconds(10), stoppingToken);
+                await Task.Delay(TimeSpan.FromSeconds(5), stoppingToken);
             }
         }
     }
