@@ -1,4 +1,6 @@
-﻿using StockDashboardAPI.Models;
+﻿using Microsoft.AspNetCore.SignalR;
+using StockDashboardAPI.Hubs;
+using StockDashboardAPI.Models;
 using System.Text.Json;
 
 namespace StockDashboardAPI.Services
@@ -7,11 +9,13 @@ namespace StockDashboardAPI.Services
     {
         private readonly ILogger<StockDataFetcherService> _logger;
         private readonly HttpClient _httpClient;
+        private readonly IHubContext<StockHub> _hubContext;
         private readonly string _stockApiUrl = "https://www.alphavantage.co/query?function=TIME_SERIES_WEEKLY&symbol=IBM&apikey=demo";
-        public StockDataFetcherService(ILogger<StockDataFetcherService> logger, HttpClient httpClient)
+        public StockDataFetcherService(ILogger<StockDataFetcherService> logger, HttpClient httpClient, IHubContext<StockHub> hubContext)
         {
             _logger = logger;
             _httpClient = httpClient;
+            _hubContext = hubContext;
         }
 
         protected override async Task ExecuteAsync(CancellationToken stoppingToken)
@@ -32,14 +36,13 @@ namespace StockDashboardAPI.Services
 
                     stockData.Timestamp = DateTime.Now;
 
-                    // TODO: Save or broadcast this stockData
-                    // (I will push it to clients using SignalR in the next section)
+                    await _hubContext.Clients.All.SendAsync("ReceiveStockData", stockData, cancellationToken: stoppingToken);
 
-                    _logger.LogInformation($"Stock data fetched: {stockData.Symbol} - {stockData.Price}");
+                    _logger.LogInformation($"Broadcasted stock data: {stockData.Symbol} - {stockData.Price}");
                 }
                 catch (Exception ex)
                 {
-                    _logger.LogError(ex, "Error fetching stock data");
+                    _logger.LogError(ex, "Error fetching or broadcasting stock data");
                 }
 
                 // Wait for a period before the next fetch
