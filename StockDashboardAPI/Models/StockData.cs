@@ -1,4 +1,4 @@
-﻿namespace StockDashboardAPI.Properties.Models
+﻿namespace StockDashboardAPI.Models
 {
     public class StockData
     {
