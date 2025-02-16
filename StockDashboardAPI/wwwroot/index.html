@@ -1,0 +1,55 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Stock Dashboard</title>
+    <!-- Include Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Include SignalR Client -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/6.0.0/signalr.min.js"></script>
+</head>
+<body>
+    <h1>Real-Time Stock Dashboard</h1>
+    <canvas id="stockChart" width="800" height="400"></canvas>
+    <script>
+        // Initialize Chart.js
+        const ctx = document.getElementById('stockChart').getContext('2d');
+        const stockChart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: [], // Timestamps
+                datasets: [{
+                    label: 'Stock Price',
+                    data: [], // Prices
+                    borderColor: 'rgba(75, 192, 192, 1)',
+                    fill: false
+                }]
+            },
+            options: {
+                scales: {
+                    x: { title: { display: true, text: 'Time' } },
+                    y: { title: { display: true, text: 'Price ($)' } }
+                }
+            }
+        });
+
+        // Connect to SignalR hub
+        const connection = new signalR.HubConnectionBuilder()
+            .withUrl("/stockHub")
+            .build();
+
+        connection.on("ReceiveStockData", (stockData) => {
+            // Assume stockData has properties: Symbol, Price, Timestamp
+            console.log(stockData);
+            const time = new Date(stockData.timestamp).toLocaleTimeString();
+            // Update the chart
+            stockChart.data.labels.push(time);
+            stockChart.data.datasets[0].data.push(stockData.price);
+            stockChart.update();
+        });
+
+        connection.start().catch(err => console.error(err.toString()));
+    </script>
+</body>
+</html>

@@ -31,4 +31,6 @@ app.MapControllers();
 
 app.MapHub<StockHub>("/stockHub");
 
+app.UseStaticFiles();
+
 app.Run();
