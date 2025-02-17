@@ -3,53 +3,57 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Stock Dashboard</title>
+    <title>Stock Volume Chart</title>
     <!-- Include Chart.js -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <!-- Include SignalR Client -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/6.0.0/signalr.min.js"></script>
 </head>
 <body>
-    <h1>Real-Time Stock Dashboard</h1>
-    <canvas id="stockChart" width="800" height="400"></canvas>
+    <h1>Stock Volume Changes</h1>
+    <canvas id="volumeChart" width="800" height="400"></canvas>
+
     <script>
         // Initialize Chart.js
-        const ctx = document.getElementById('stockChart').getContext('2d');
-        const stockChart = new Chart(ctx, {
+        const ctx = document.getElementById('volumeChart').getContext('2d');
+        const volumeChart = new Chart(ctx, {
             type: 'line',
             data: {
-                labels: [], // Timestamps
+                labels: [], // Time
                 datasets: [{
-                    label: 'Stock Price',
-                    data: [], // Prices
-                    borderColor: 'rgba(75, 192, 192, 1)',
+                    label: 'Volume',
+                    data: [], // Volume values
+                    borderColor: 'rgba(255, 99, 132, 1)',
                     fill: false
                 }]
             },
             options: {
                 scales: {
                     x: { title: { display: true, text: 'Time' } },
-                    y: { title: { display: true, text: 'Price ($)' } }
+                    y: { title: { display: true, text: 'Volume' } }
                 }
             }
         });
 
-        // Connect to SignalR hub
-        const connection = new signalR.HubConnectionBuilder()
-            .withUrl("/stockHub")
-            .build();
+        async function fetchVolumeData() {
+            try {
+                const response = await fetch('/api/stocks/volume'); // Fetch from API
+                const data = await response.json();
 
-        connection.on("ReceiveStockData", (stockData) => {
-            // Assume stockData has properties: Symbol, Price, Timestamp
-            console.log(stockData);
-            const time = new Date(stockData.timestamp).toLocaleTimeString();
-            // Update the chart
-            stockChart.data.labels.push(time);
-            stockChart.data.datasets[0].data.push(stockData.price);
-            stockChart.update();
-        });
+                // Extract timestamps and volume values
+                const times = data.map(item => new Date(item.Timestamp).toLocaleTimeString());
+                const volumes = data.map(item => parseInt(item.Volume));
 
-        connection.start().catch(err => console.error(err.toString()));
+                // Update Chart
+                volumeChart.data.labels = times;
+                volumeChart.data.datasets[0].data = volumes;
+                volumeChart.update();
+            } catch (error) {
+                console.error('Error fetching stock volume data:', error);
+            }
+        }
+
+        // Fetch volume data every 30 seconds
+        fetchVolumeData();
+        setInterval(fetchVolumeData, 10000);
     </script>
 </body>
 </html>

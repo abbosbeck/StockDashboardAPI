@@ -49,7 +49,7 @@ namespace StockDashboardAPI.Services
                 }
 
                 // Wait for a period before the next fetch
-                await Task.Delay(TimeSpan.FromSeconds(5), stoppingToken);
+                await Task.Delay(TimeSpan.FromSeconds(40), stoppingToken);
             }
         }
     }
